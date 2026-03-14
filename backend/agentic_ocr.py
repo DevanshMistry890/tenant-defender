@@ -13,10 +13,15 @@ You are a highly precise legal document extraction AI. Your sole job is to read 
 
 CRITICAL INSTRUCTIONS:
 1. DO NOT guess or infer missing information. If a field is illegible or missing, output null or an empty string.
-2. DATES: Look for the 'Termination Date' (usually prominently displayed as the move-out date) and the 'Notice Date' (usually at the very bottom next to the signature). Format as YYYY-MM-DD.
-3. MUNICIPALITY: Read the 'Rental Unit Address' block carefully. Extract the city name (e.g., Kitchener, Waterloo, Toronto) into the municipality field. 
-4. REASON: Look at the checkboxes. Identify exactly which reason for eviction the landlord selected.
-5. COMPENSATION: Look for a checked box indicating the landlord will pay the tenant an amount equal to one month's rent. If checked, set compensation_indicated to true.
+2. DATES: Look for the 'Termination Date' and the 'Notice Date'. Format as YYYY-MM-DD.
+3. MUNICIPALITY: Extract the city name into the municipality field. 
+4. REASON: Identify exactly which reason for eviction the landlord selected.
+5. REASON 1: If the landlord checked 'Reason 1', set reason_1_checked to true.
+6. LANDLORD NAME & ENTITY: Extract the landlord's name from the signature block. If it implies a business entity, set is_corporate_landlord to true.
+7. SPATIAL BOUNDING BOXES: You must locate specific elements on the document and return their bounding boxes as exactly 4 floats between 0.0 and 1.0 in the format [ymin, xmin, ymax, xmax].
+   - signature_bounding_box: The landlord's signature block on Page 2.
+   - termination_date_bounding_box: The termination date ("move out" date) on Page 1.
+   - address_bounding_box: The Rental Unit Address block on Page 1.
 """
 
 class ReasonForEviction(BaseModel):
@@ -34,8 +39,8 @@ class N12ExtractionSchema(BaseModel):
     tenant_names: List[str] = Field(
         description="List of all tenants named on the notice."
     )
-    landlord_names: List[str] = Field(
-        description="List of all landlords named on the notice."
+    landlord_name: str = Field(
+        description="The name of the landlord or company listed in the signature block on Page 2."
     )
     rental_address: str = Field(
         description="The full address of the rental unit. Pay close attention to unit numbers."
@@ -52,9 +57,24 @@ class N12ExtractionSchema(BaseModel):
     eviction_reason: ReasonForEviction = Field(
         description="The specific reason checked on the form."
     )
-    compensation_indicated: bool = Field(
-        description="Did the landlord check the box indicating they will pay 1 month's rent?"
+    reason_1_checked: bool = Field(
+        description="True if Reason 1 (personal use) is checked."
+    )
+    is_corporate_landlord: bool = Field(
+        description="True if the landlord_name contains Inc, Corp, Ltd, LLC, or implies a business entity."
     )
     is_signed: bool = Field(
         description="Is there a physical or electronic signature at the bottom?"
+    )
+    signature_bounding_box: Optional[List[float]] = Field(
+        default=None,
+        description="The bounding box of the landlord signature block. Must be exactly 4 floats between 0.0 and 1.0: [ymin, xmin, ymax, xmax]."
+    )
+    termination_date_bounding_box: Optional[List[float]] = Field(
+        default=None,
+        description="The bounding box of the termination date on the notice. Must be exactly 4 floats between 0.0 and 1.0: [ymin, xmin, ymax, xmax]."
+    )
+    address_bounding_box: Optional[List[float]] = Field(
+        default=None,
+        description="The bounding box of the rental unit address block. Must be exactly 4 floats between 0.0 and 1.0: [ymin, xmin, ymax, xmax]."
     )

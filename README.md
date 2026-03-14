@@ -15,14 +15,14 @@
 
 When a tenant receives an N12 eviction notice, they are often panicked, unaware of their rights, and unable to afford immediate legal counsel. While standard LLMs can offer generic advice, they notoriously **hallucinate dates, math, and specific statutory citations**—making them dangerous for real legal defense.
 
-**Tenant Defender** solves this by implementing a **Strict Context-Augmented Generation (Strict-CAG)** architecture. It combines the multimodal extraction power of Vision-Language Models with the mathematical certainty of deterministic Python logic, wrapped in a 1-Million token context window containing the exact text of the Ontario Residential Tenancies Act (RTA) and local municipal bylaws.
+**Tenant Defender** solves this by implementing a **Strict Context-Augmented Generation (Strict-CAG)** architecture. It combines the multimodal extraction power of Vision-Language Models with the mathematical certainty of deterministic Python logic, wrapped in a massive context window containing the exact text of the Ontario Residential Tenancies Act (RTA) and local municipal bylaws.
 
 ### 🚀 Key Capabilities
 
-* **👁️ Agentic OCR:** Uses Gemini 2.5 Flash's multimodal capabilities to visually scan messy, photographed eviction notices and force the extraction into a strict, validated Pydantic JSON schema.
-* **🧮 Deterministic Pre-Processing:** Bypasses LLM math hallucinations entirely. The Python backend calculates termination notice periods (the "60-day rule") and routes municipal bylaws (e.g., Kitchener's Shared Accommodation License) before the AI even reads the law.
-* **📚 1M-Token Legal Context:** Injects 350,000+ characters of the Ontario RTA and local municipal codes directly into the active memory of the LLM, forcing the model to evaluate the notice exclusively against provided statutes.
-* **⚖️ Citation-Only Constraints:** Generates a strict "Evaluation Report" where every identified procedural flaw must be backed by an exact, quoted legal citation.
+* **👁️ Agentic OCR & Visual Audit Trail:** Uses Gemini 2.5 Flash's multimodal capabilities to visually scan messy, photographed eviction notices. It extracts data into a strict Pydantic JSON schema and returns spatial bounding boxes, dynamically highlighting the exact checkbox or date on the UI to build user trust.
+* **🧮 Deterministic Pre-Processing (Neuro-Symbolic Gate):** Bypasses LLM math hallucinations entirely. The Python backend calculates termination notice periods (the "60-day rule") and routes municipal bylaws (e.g., Kitchener's Shared Accommodation License) before the AI even interprets the law.
+* **📚 High-Context Legal Reasoning:** Injects the Ontario RTA and local municipal codes directly into the active memory of the LLM, forcing the model to evaluate the notice exclusively against provided statutes.
+* **⚡ Progressive Disclosure UI:** Utilizes Server-Sent Events (SSE) to stream the asynchronous backend execution log directly to the React frontend, allowing the user to watch the AI verify facts in real-time.
 
 ---
 
@@ -31,24 +31,25 @@ When a tenant receives an N12 eviction notice, they are often panicked, unaware 
 ```mermaid
 sequenceDiagram
     participant User as Next.js UI
-    participant API as FastAPI Backend
+    participant API as FastAPI Backend (SSE)
     participant OCR as Gemini Vision (Agentic OCR)
     participant Logic as Deterministic Engine
-    participant CAG as Gemini LLM (1M Context)
+    participant CAG as Gemini LLM (Strict-CAG)
     
     User->>API: Uploads photo of N12 Notice
+    API->>User: Stream Status: Scanning...
     API->>OCR: Pass image + Strict Pydantic Schema
-    OCR-->>API: Returns strictly typed JSON data
+    OCR-->>API: Returns typed JSON + Bounding Boxes
     
+    API->>User: Stream Status: Calculating...
     API->>Logic: Route JSON through Python Math/Rules
-    Note over Logic: Validates 60-day math & Municipal routing
-    Logic-->>API: Appends mathematical flaws
+    Logic-->>API: Appends mathematical flaws (e.g. 58 days)
     
+    API->>User: Stream Status: Auditing Legal Context...
     API->>CAG: Inject JSON + 350k chars of RTA/Bylaws
-    Note over CAG: Evaluates reasoning (e.g., Corporate Bad Faith)
     CAG-->>API: Returns Citation-Backed Flaws + Defense Script
     
-    API-->>User: Renders Editorial Legal Report
+    API-->>User: Renders Interactive Legal Report & Audit Trail
 
 ```
 
@@ -57,10 +58,9 @@ sequenceDiagram
 | Component | Technology | Role |
 | --- | --- | --- |
 | **Frontend** | **Next.js + Tailwind** | "Professional Editorial" UI using Server-Side Rendering. |
-| **Backend** | **FastAPI** | High-performance asynchronous Python API. |
+| **Backend** | **FastAPI** | High-performance asynchronous Python API using Server-Sent Events (SSE). |
 | **Data Validation** | **Pydantic** | Enforcing strict JSON structures from the Vision model. |
-| **AI Engine** | **Gemini 2.5 Flash** | Multimodal OCR and 1M-Token deep legal reasoning. |
-| **Document Parser** | **pdfplumber** | Extracting clean text from massive legal PDFs. |
+| **AI Engine** | **Gemini Models** | Multimodal OCR and deep legal reasoning. |
 
 ---
 
@@ -68,18 +68,18 @@ sequenceDiagram
 
 ### 1. The Math & Date Hallucination Trap
 
-**Challenge:** LLMs are linguistic engines, not calculators. If you ask an LLM if "March 13 to May 31" is 60 days, it will often hallucinate the answer, providing catastrophic legal advice.
-**Solution:** Built a hybrid architecture. The Vision model extracts the dates as raw strings, Pydantic converts them to `datetime` objects, and Python does the math. The AI is reserved exclusively for complex textual reasoning.
+**Challenge:** LLMs are linguistic engines, not calculators. If you ask an LLM if "March 13 to May 31" is 60 days, it will often hallucinate the answer.
+**Solution:** Built a hybrid Neuro-Symbolic architecture. The Vision model extracts the dates as raw strings, Pydantic converts them, and Python handles the math. The AI is reserved exclusively for complex textual reasoning.
 
-### 2. Context Window Overflow
+### 2. The AI "Black Box" Trust Barrier
 
-**Challenge:** The Ontario RTA and Kitchener Bylaws combined exceed 130,000 tokens.
-**Solution:** Utilized Gemini 2.5 Flash's massive 1M token context window, reading the PDFs into memory *once* at server initialization (`main.py` global scope) to drastically reduce latency on subsequent API calls.
+**Challenge:** Panicked users do not trust AI with serious legal matters, especially if the UI feels like a magic black box.
+**Solution:** Engineered a split-screen Visual Audit Trail. When the deterministic logic flags a violation (e.g., missing compensation), the Next.js frontend utilizes the spatial coordinates extracted by Gemini Vision to draw a high-contrast bounding box directly over the uploaded image, proving the system's "Ground Truth."
 
-### 3. Institutional Trust via UX Design
+### 3. Future Scalability: Adaptive Parallel Encoding (APE)
 
-**Challenge:** Panicked users do not trust "playful" or "techy" UIs with serious legal matters.
-**Solution:** Implemented a strict "Editorial/Professional" design system. Using warm ivory backgrounds, thin structural rule-lines, and classical Serif typography (Playfair Display) to mimic the aesthetic of physical court documents and establish immediate authority.
+**Challenge:** Loading massive PDFs into the context window for every request incurs high token costs and latency.
+**Solution:** The architecture is designed to support Google's Context Caching API. In a production environment, the RTA and municipal bylaws are uploaded once, and their Key-Value states are cached. Subsequent tenant queries hit the cache instantly, dropping latency to milliseconds.
 
 ---
 
@@ -88,7 +88,7 @@ sequenceDiagram
 ```text
 tenant-defender/
 ├── backend/
-│   ├── main.py                 # FastAPI application and route orchestration
+│   ├── main.py                 # FastAPI application and async SSE orchestration
 │   ├── agentic_ocr.py          # Pydantic schemas and Vision extraction prompts
 │   ├── evaluator.py            # Strict-CAG logic and deterministic math engine
 │   ├── requirements.txt        
@@ -97,7 +97,7 @@ tenant-defender/
 │       └── kitchener_bylaw.pdf
 └── frontend/
     ├── app/
-    │   ├── page.tsx            # Main upload UI and Editorial report generation
+    │   ├── page.tsx            # Main upload UI, bounding box logic, and SSE listener
     │   └── layout.tsx          # Font loading and global metadata
     ├── package.json
     └── tailwind.config.ts      # Custom editorial design tokens

@@ -18,8 +18,8 @@ const ibmMono = IBM_Plex_Mono({
 });
 
 export const metadata = {
-  title: 'Tenant Defender | Editorial Legal Evaluation',
-  description: 'Strict Context-Augmented Generation (CAG) Legal Evaluator for Ontario Renters.',
+  title: 'Tenant Defender | Strict-CAG Legal Evaluation',
+  description: 'Empowering vulnerable renters with zero-hallucination, citation-backed legal defense against bad-faith evictions.',
 }
 
 export default function RootLayout({
