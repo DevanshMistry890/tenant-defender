@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  /* Colors */
+  --color-background: #FAFAF8;
+  --color-foreground: #1A1A1A;
+  --color-muted: #F5F3F0;
+  --color-muted-foreground: #6B6B6B;
+  --color-accent: #B8860B;
+  --color-accent-secondary: #D4A84B;
+  --color-accent-muted: rgba(184, 134, 11, 0.06);
+  --color-border-warm: #E8E4DF;
+  --color-card: #FFFFFF;
+  
+  /* Typography */
+  --font-serif: "var(--font-playfair)", serif;
+  --font-sans: "var(--font-source-sans)", system-ui, sans-serif;
+  --font-mono: "var(--font-ibm-mono)", monospace;
+  
+  /* Spacing */
+  --spacing-18: 4.5rem;
+  --spacing-22: 5.5rem;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    line-height: 1.75;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
+
+.small-caps {
+  @apply font-mono text-[0.75rem] font-medium uppercase tracking-[0.15em];
+}
+
+.rule-line {
+  @apply h-px bg-border-warm w-full;
+}
+
+/* Paper Texture Overlay */
+.paper-texture::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background-image: url("https://www.transparenttextures.com/patterns/p6.png");
+  opacity: 0.03;
+  z-index: 50;
+}
