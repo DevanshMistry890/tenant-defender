@@ -9,6 +9,14 @@
 > **Built for the GenAI Genesis 2026 Hackathon**
 > *Empowering vulnerable renters with zero-hallucination, citation-backed legal defense against bad-faith evictions.*
 
+
+## 📺 Watch it in Action
+
+Judges, start here! Watch the system catch a bad-faith eviction in real-time, or listen to a deep dive into our Strict-CAG architecture.
+
+* 🎬 **[Watch the 3-Minute Live App Demo](https://youtu.be/zZmivNutBL0)** *(Primary Submission)*
+* 🎧 **[Listen to the Architecture Audio Deep Dive](https://youtu.be/xOnjNb-1_38)** *(NotebookLM Explainer)*
+
 ---
 
 ## 📖 Overview
@@ -95,6 +103,7 @@ tenant-defender/
 │   └── data/
 │       ├── ontario_rta_2006.pdf
 │       └── kitchener_bylaw.pdf
+├── demo/ #demo N12 notice to test working
 └── frontend/
     ├── app/
     │   ├── page.tsx            # Main upload UI, bounding box logic, and SSE listener

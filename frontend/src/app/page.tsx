@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { Logo } from "./components/Logo";
 
 type StreamStatus = "idle" | "scanning" | "calculating" | "verifying" | "auditing" | "complete" | "error";
 
@@ -32,7 +33,9 @@ export default function Home() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeBox, setActiveBox] = useState<BoundingBox | null>(null);
+
+  // MODIFIED: State now holds the entire Flaw object to access its type for color coding
+  const [activeFlaw, setActiveFlaw] = useState<Flaw | null>(null);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -50,7 +53,7 @@ export default function Home() {
       setError(null);
       setStreamStatus("idle");
       setLogs([]);
-      setActiveBox(null);
+      setActiveFlaw(null);
 
       if (files.length === 1) {
         // Standard single image handling
@@ -115,7 +118,7 @@ export default function Home() {
     setError(null);
     setResult(null);
     setLogs([]);
-    setActiveBox(null);
+    setActiveFlaw(null);
 
     let logIdCounter = 0;
 
@@ -188,21 +191,21 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-background text-foreground selection:bg-accent/20 pb-20">
+    <main className="min-h-screen bg-background text-foreground selection:bg-accent/20 pb-20 print:pb-0 print:bg-white">
       {/* Editorial Decorative Rule */}
-      <div className="h-1 bg-accent w-full" />
+      <div className="h-1 bg-accent w-full print:hidden" />
 
-      <div className="max-w-6xl mx-auto px-6 mt-12 mb-12 md:mt-20">
+      <div className="max-w-6xl mx-auto px-6 mt-12 mb-12 md:mt-20 print:mt-8 print:px-0">
         <header className="text-center mb-16 animate-in fade-in slide-in-from-top-4 duration-700">
           <div className="flex items-center justify-center gap-4 mb-6">
-            <div className="text-accent">
+            <div className="text-accent print:text-black">
               <Logo className="w-12 h-12 md:w-16 md:h-16" />
             </div>
             <h1 className="text-5xl md:text-6xl font-serif tracking-tight leading-[1.1]">
               Tenant Defender
             </h1>
           </div>
-          <p className="text-lg md:text-xl text-muted-foreground/80 max-w-2xl mx-auto leading-relaxed italic pr-4">
+          <p className="text-lg md:text-xl text-muted-foreground/80 max-w-2xl mx-auto leading-relaxed italic pr-4 print:hidden">
             "Justice is not accidental. It is the result of rigorous context and unwavering defense."
           </p>
         </header>
@@ -226,7 +229,6 @@ export default function Home() {
                       <p className="small-caps text-muted-foreground text-lg mb-2">Click to upload notice</p>
                       <p className="text-sm text-muted-foreground/60 italic px-4 text-center">Supported formats: PNG, JPG, JPEG (Select multiple for page 1 & 2)</p>
                     </div>
-                    {/* ADDED MULTIPLE FLAG HERE */}
                     <input id="notice-upload" type="file" className="hidden" accept="image/*" multiple onChange={handleFileChange} />
                   </label>
                 </div>
@@ -234,31 +236,32 @@ export default function Home() {
             </section>
           </div>
         ) : (
-          <div className="flex flex-col lg:flex-row gap-8 lg:items-start animate-in fade-in duration-700">
+          <div className="flex flex-col lg:flex-row gap-8 lg:items-start animate-in fade-in duration-700 print:block">
             {/* LEFT: Document View (Sticky) */}
-            <section className="flex-1 bg-card border border-border-warm rounded-lg shadow-sm overflow-hidden flex flex-col relative lg:sticky lg:top-8 z-10">
-              <div className="absolute top-0 right-0 w-16 h-16 bg-accent-muted rounded-bl-full -mr-8 -mt-8 pointer-events-none" />
+            <section className="flex-1 bg-card border border-border-warm rounded-lg shadow-sm overflow-hidden flex flex-col relative lg:sticky lg:top-8 z-10 print:border-none print:shadow-none print:mb-8">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-accent-muted rounded-bl-full -mr-8 -mt-8 pointer-events-none print:hidden" />
 
-              <div className="p-6 flex-1 flex flex-col">
+              <div className="p-6 flex-1 flex flex-col print:p-0">
                 <div className="mb-4 flex items-center gap-4">
-                  <span className="small-caps text-accent tracking-widest">Document Ground Truth</span>
-                  <div className="rule-line flex-1" />
+                  <span className="small-caps text-accent tracking-widest print:text-black">Document Ground Truth</span>
+                  <div className="rule-line flex-1 print:border-black" />
                 </div>
 
-                <div className="flex-1 relative w-full border border-border-warm/50 rounded group p-4 bg-white/50 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                {/* MODIFIED: Adjusted max-height to 50vh for mobile screens */}
+                <div className="flex-1 relative w-full border border-border-warm/50 rounded group p-4 bg-white/50 max-h-[50vh] lg:max-h-[70vh] overflow-y-auto custom-scrollbar print:max-h-none print:border-none print:overflow-visible">
                   <div className="relative inline-block w-full h-auto mx-auto align-top">
                     {/* The Document Image */}
                     <img
                       src={previewUrl}
                       alt="Notice Ground Truth"
-                      className={`w-full h-auto block rounded transition-all duration-700
+                      className={`w-full h-auto block rounded transition-all duration-700 print:max-w-[70%] print:mx-auto
                         ${streamStatus !== "idle" && streamStatus !== "complete" && streamStatus !== "error" ? "opacity-40 grayscale blur-[1px]" : "opacity-100 grayscale-0"}
                       `}
                     />
 
                     {/* Target Reticle / Scanner Overlay during processing */}
                     {streamStatus !== "idle" && streamStatus !== "complete" && streamStatus !== "error" && (
-                      <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center z-10">
+                      <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center z-10 print:hidden">
                         <div className="w-full h-1 bg-accent/20 absolute top-0 animate-[scan_3s_ease-in-out_infinite]" />
                         <div className="bg-background/80 backdrop-blur-sm border border-accent/30 text-accent small-caps px-4 py-2 rounded-full shadow-lg flex items-center gap-3">
                           <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
@@ -267,19 +270,28 @@ export default function Home() {
                       </div>
                     )}
 
-                    {/* Interactive Bounding Box Overlay for Audit Trail */}
-                    {streamStatus === "complete" && activeBox && (
-                      <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-20">
+                    {/* MODIFIED: Interactive Bounding Box Overlay for Audit Trail with CSS Animations and Dynamic Colors */}
+                    {streamStatus === "complete" && activeFlaw?.bounding_box && (
+                      <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-20 print:hidden">
                         <div
-                          className="absolute border-2 border-accent bg-accent/20 shadow-[0_0_15px_rgba(184,134,11,0.5)] transition-all duration-300"
-                          style={getBoxStyle(activeBox)}
+                          className={`absolute border-2 transition-all duration-500 ease-out animate-in zoom-in-95
+                            ${activeFlaw.flaw_type === "deterministic"
+                              ? "border-red-500 bg-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.6)]"
+                              : activeFlaw.flaw_type === "fact"
+                                ? "border-blue-500 bg-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.6)]"
+                                : "border-orange-500 bg-orange-500/20 shadow-[0_0_15px_rgba(249,115,22,0.6)]"
+                            }
+                          `}
+                          style={getBoxStyle(activeFlaw.bounding_box)}
                         />
                         {/* Connection line helper */}
                         <div
-                          className="absolute right-[0] border-t-[2px] border-dashed border-accent/60 hidden lg:block"
+                          className={`absolute right-[0] border-t-[2px] border-dashed hidden lg:block
+                            ${activeFlaw.flaw_type === "deterministic" ? "border-red-500/60" : activeFlaw.flaw_type === "fact" ? "border-blue-500/60" : "border-orange-500/60"}
+                          `}
                           style={{
-                            top: `${(activeBox.ymin + (activeBox.ymax - activeBox.ymin) / 2) * 100}%`,
-                            width: `max(50px, ${100 - (activeBox.xmax * 100)}%)`,
+                            top: `${(activeFlaw.bounding_box.ymin + (activeFlaw.bounding_box.ymax - activeFlaw.bounding_box.ymin) / 2) * 100}%`,
+                            width: `max(50px, ${100 - (activeFlaw.bounding_box.xmax * 100)}%)`,
                             transform: 'translateX(100%)'
                           }}
                         />
@@ -289,15 +301,14 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Control Bar */}
-              <div className="p-4 px-6 border-t border-border-warm bg-muted/10 flex justify-between items-center">
+              {/* MODIFIED: Added print:hidden to the control bar */}
+              <div className="p-4 px-6 border-t border-border-warm bg-muted/10 flex justify-between items-center print:hidden">
                 <button
                   onClick={() => document.getElementById('notice-upload-hidden')?.click()}
                   className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors custom-underline"
                 >
                   Choose Different File
                 </button>
-                {/* ADDED MULTIPLE FLAG HERE */}
                 <input id="notice-upload-hidden" type="file" className="hidden" accept="image/*" multiple onChange={handleFileChange} />
                 <button
                   onClick={handleUpload}
@@ -315,11 +326,11 @@ export default function Home() {
             </section>
 
             {/* RIGHT: Analysis Stepper / Results */}
-            <section className="flex-1 flex flex-col gap-6 lg:max-w-xl w-full">
+            <section className="flex-1 flex flex-col gap-6 lg:max-w-xl w-full print:block">
 
-              {/* Live Execution Stepper */}
+              {/* MODIFIED: Added print:hidden to the execution stepper log */}
               {(streamStatus !== "idle" || logs.length > 0) && (
-                <div className="bg-card border border-border-warm rounded-lg p-6 shadow-sm">
+                <div className="bg-card border border-border-warm rounded-lg p-6 shadow-sm print:hidden">
                   <div className="mb-4 flex items-center justify-between border-b border-border-warm pb-3">
                     <span className="small-caps text-muted-foreground tracking-widest text-[0.7rem]">Execution Log</span>
                     {streamStatus === "complete" && <span className="small-caps text-accent text-[0.65rem] tracking-widest">Verified</span>}
@@ -353,7 +364,7 @@ export default function Home() {
 
               {/* Error State */}
               {error && (
-                <div className="bg-red-50/50 border border-red-200 p-6 rounded-md animate-in shake duration-500">
+                <div className="bg-red-50/50 border border-red-200 p-6 rounded-md animate-in shake duration-500 print:hidden">
                   <div className="flex items-start gap-3">
                     <svg className="w-5 h-5 text-red-600 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"></path></svg>
                     <p className="font-sans text-sm text-red-800 leading-relaxed font-medium">{error}</p>
@@ -363,12 +374,12 @@ export default function Home() {
 
               {/* Audit Trail Results */}
               {streamStatus === "complete" && result && (
-                <div className="bg-card border border-border-warm rounded-lg shadow-sm animate-in slide-in-from-top-4 duration-700 flex flex-col">
+                <div className="bg-card border border-border-warm rounded-lg shadow-sm animate-in slide-in-from-top-4 duration-700 flex flex-col print:border-none print:shadow-none">
 
-                  <div className="p-6 md:p-8 bg-background border-b border-border-warm">
+                  <div className="p-6 md:p-8 bg-background border-b border-border-warm print:p-0 print:border-b-2 print:border-black print:mb-6">
                     <div className="flex flex-col md:flex-row md:items-baseline justify-between gap-4">
                       <h2 className="text-3xl font-serif">Assessment</h2>
-                      <div className={`px-3 py-1.5 rounded small-caps text-[0.6rem] tracking-widest border self-start
+                      <div className={`px-3 py-1.5 rounded small-caps text-[0.6rem] tracking-widest border self-start print:border-black print:text-black print:bg-transparent
                         ${result.is_likely_invalid ? "bg-red-50/50 text-red-800 border-red-200" : "bg-green-50/50 text-green-800 border-green-200"}
                       `}>
                         {result.is_likely_invalid ? 'Irregularity Detected' : 'No Critical Flaws'}
@@ -376,26 +387,27 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div className="p-6 md:p-8 flex-1">
+                  <div className="p-6 md:p-8 flex-1 print:p-0">
                     {result.fatal_flaws && result.fatal_flaws.length > 0 ? (
                       <div className="space-y-6">
-                        <p className="small-caps text-muted-foreground mb-6 tracking-widest text-[0.7rem]">Identified Statutory Violations</p>
+                        <p className="small-caps text-muted-foreground mb-6 tracking-widest text-[0.7rem] print:text-black">Identified Statutory Violations</p>
                         {result.fatal_flaws.map((flaw: Flaw, idx: number) => (
                           <div
                             key={idx}
-                            className={`relative pl-6 py-3 border-l-[3px] hover:bg-muted/10 group cursor-crosshair transition-all duration-300 rounded-r
+                            className={`relative pl-6 py-3 border-l-[3px] hover:bg-muted/10 group cursor-crosshair transition-all duration-300 rounded-r print:border-l-[4px] print:border-black print:bg-transparent
                               ${flaw.flaw_type === "deterministic"
                                 ? "border-red-600 bg-red-50/10"
                                 : flaw.flaw_type === "fact"
                                   ? "border-muted-foreground/30 bg-muted/5"
                                   : "border-orange-400/50 bg-orange-50/5"}
                             `}
-                            onMouseEnter={() => flaw.bounding_box && setActiveBox(flaw.bounding_box)}
-                            onMouseLeave={() => setActiveBox(null)}
+                            // MODIFIED: Store the entire flaw instead of just the bounding box
+                            onMouseEnter={() => flaw.bounding_box && setActiveFlaw(flaw)}
+                            onMouseLeave={() => setActiveFlaw(null)}
                           >
                             {/* Trust Badge */}
                             <div className="mb-2">
-                              <span className={`small-caps text-[0.6rem] tracking-widest px-1.5 py-0.5 rounded border
+                              <span className={`small-caps text-[0.6rem] tracking-widest px-1.5 py-0.5 rounded border print:border-black print:text-black print:bg-transparent
                                 ${flaw.flaw_type === "deterministic"
                                   ? "bg-red-100 text-red-900 border-red-200"
                                   : flaw.flaw_type === "fact"
@@ -406,36 +418,49 @@ export default function Home() {
                               </span>
                             </div>
 
-                            <p className="text-foreground/90 font-medium mb-3 leading-snug group-hover:text-foreground transition-colors pr-2">{flaw.description}</p>
+                            <p className="text-foreground/90 font-medium mb-3 leading-snug group-hover:text-foreground transition-colors pr-2 print:text-black">{flaw.description}</p>
 
-                            <div className={`py-3 px-4 border rounded text-sm relative transition-all group-hover:shadow-sm
+                            <div className={`py-3 px-4 border rounded text-sm relative transition-all group-hover:shadow-sm print:bg-transparent print:border-black
                               ${flaw.flaw_type === "deterministic"
                                 ? "bg-red-50/50 border-red-100"
                                 : flaw.flaw_type === "fact"
                                   ? "bg-muted/20 border-border-warm/50"
                                   : "bg-muted/40 border-border-warm"}
                             `}>
-                              <span className="text-foreground/80 font-mono text-[0.7rem] font-medium tracking-tight">Citation: {flaw.citation}</span>
+                              <span className="text-foreground/80 font-mono text-[0.7rem] font-medium tracking-tight print:text-black">Citation: {flaw.citation}</span>
                             </div>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-muted-foreground font-medium italic">No immediate statutory irregularities were detected on the face of this notice based on standard parsing thresholds.</p>
+                      <p className="text-muted-foreground font-medium italic print:text-black">No immediate statutory irregularities were detected on the face of this notice based on standard parsing thresholds.</p>
                     )}
                   </div>
 
                   {result.recommendation_script && (
-                    <div className="p-6 md:p-8 bg-muted/30 border-t border-border-warm relative">
-                      <h3 className="small-caps mb-4 text-accent tracking-widest text-[0.7rem]">Recommended Defense Script</h3>
-                      <p className="text-lg font-serif leading-relaxed text-foreground/90 italic mb-8">
+                    <div className="p-6 md:p-8 bg-muted/30 border-t border-border-warm relative print:p-0 print:border-none print:bg-transparent print:mt-8">
+                      <h3 className="small-caps mb-4 text-accent tracking-widest text-[0.7rem] print:text-black">Recommended Defense Script</h3>
+                      <p className="text-lg font-serif leading-relaxed text-foreground/90 italic mb-8 print:text-black">
                         "{result.recommendation_script}"
                       </p>
-                      <p className="text-[0.6rem] font-mono tracking-widest text-muted-foreground text-center opacity-60">
+                      <p className="text-[0.6rem] font-mono tracking-widest text-muted-foreground text-center opacity-60 print:text-black print:text-left">
                         NOT LEGAL ADVICE. AUTOMATED ASSESSMENT ONLY.
                       </p>
                     </div>
                   )}
+
+                  {/* MODIFIED: Add "Save Assessment as PDF" Button */}
+                  <div className="p-6 md:p-8 bg-background border-t border-border-warm print:hidden">
+                    <button
+                      onClick={() => window.print()}
+                      className="w-full py-3 rounded-md small-caps text-foreground border border-border-warm hover:bg-muted transition-colors flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                      </svg>
+                      Save Assessment as PDF
+                    </button>
+                  </div>
                 </div>
               )}
             </section>
@@ -444,35 +469,11 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <footer className="w-full py-12 text-center mt-auto">
+      <footer className="w-full py-12 text-center mt-auto print:hidden">
         <p className="small-caps text-[0.6rem] text-muted-foreground">
           Built with Precision & Restraint | Devansh Mistry | GenAI Genesis 2026
         </p>
       </footer>
     </main>
-  );
-}
-
-export function Logo({ className = "w-10 h-10" }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      {/* Outer Shield */}
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      {/* Inner Legal Pillar */}
-      <path d="M12 8v8" />
-      <path d="M9 16h6" />
-      <path d="M9 8h6" />
-      <path d="M10.5 8v8" />
-      <path d="M13.5 8v8" />
-    </svg>
   );
 }
